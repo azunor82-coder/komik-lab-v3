@@ -81,7 +81,8 @@ export default function ComicScreen() {
         {comic.demo ? (
           <View style={styles.block}>
             <Notice tone="warn">
-              Ini komik demo. Tetapkan ANTHROPIC_API_KEY di pelayan untuk cerita sebenar daripada idea anda.
+              Ini komik demo. Masukkan kunci API Anthropic dalam Tetapan (⚙️ di laman utama) untuk cerita
+              sebenar daripada idea anda.
             </Notice>
           </View>
         ) : null}

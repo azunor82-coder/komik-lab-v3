@@ -9,7 +9,7 @@ import { ART_STYLES, findLabel } from '@/lib/options';
 import { useComics, useStoreLoaded } from '@/lib/store';
 import { colors, fonts, MAX_PAGE_WIDTH, shadow } from '@/lib/theme';
 import type { Comic } from '@/lib/types';
-import { useServerStatus } from '@/lib/use-server-status';
+import { useBackendStatus } from '@/lib/backend';
 
 const GAP = 12;
 
@@ -23,7 +23,7 @@ const STATUS_LABEL: Record<Comic['status'], string> = {
 export default function HomeScreen() {
   const comics = useComics();
   const loaded = useStoreLoaded();
-  const { status, error } = useServerStatus();
+  const { status, error } = useBackendStatus();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const contentWidth = Math.min(width, MAX_PAGE_WIDTH) - 32;
@@ -62,9 +62,18 @@ export default function HomeScreen() {
           ) : status?.demo ? (
             <View style={styles.notice}>
               <Notice tone="warn">
-                Mod demo: pelayan belum ada ANTHROPIC_API_KEY, jadi cerita adalah contoh tetap. Tetapkan kunci
-                itu untuk komik sebenar daripada idea anda.
+                {status.mode === 'server'
+                  ? 'Mod demo: pelayan belum ada ANTHROPIC_API_KEY, jadi cerita adalah contoh tetap.'
+                  : 'Mod demo: masukkan kunci API Anthropic anda dalam Tetapan untuk komik sebenar daripada idea anda.'}
               </Notice>
+              <ComicButton
+                size="sm"
+                variant="secondary"
+                icon="⚙️"
+                label="Buka Tetapan"
+                style={styles.noticeButton}
+                onPress={() => router.push('/settings')}
+              />
             </View>
           ) : null}
 
@@ -139,6 +148,7 @@ const styles = StyleSheet.create({
   },
   heroText: { fontFamily: fonts.comicBold, fontSize: 17, lineHeight: 24, color: colors.ink },
   notice: { marginTop: 16 },
+  noticeButton: { alignSelf: 'flex-start', marginTop: 10 },
   sectionTitle: {
     fontFamily: fonts.display,
     fontSize: 28,

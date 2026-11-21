@@ -4,17 +4,14 @@ import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
 import { ART_STYLES, GENRES, findLabel } from '@/lib/options';
 import type { Character, ComicRequest, PanelImageRequestBody } from '@/lib/types';
 
-import { CLAUDE_MODEL } from './config';
-import { UserFacingError } from './http';
+import { UserFacingError } from './errors';
 import { ComicScriptSchema, type ComicScriptOutput } from './schema';
 import { sanitizeSvg } from './svg';
 
-let client: Anthropic | null = null;
-function getClient(): Anthropic {
-  // Reads ANTHROPIC_API_KEY (or ANTHROPIC_AUTH_TOKEN) from the environment.
-  client ??= new Anthropic();
-  return client;
-}
+// Shared by the server API routes and the on-device mode: callers pass in an
+// Anthropic client (server: key from env; phone: key from secure storage).
+
+export const DEFAULT_CLAUDE_MODEL = 'claude-opus-5-5';
 
 // Server-side refusal fallback: if a safety classifier declines, the API
 // re-runs the request on Anthropic's recommended fallback model.
@@ -49,9 +46,13 @@ Number of panels: exactly ${req.panelCount}
 Comic language: ${language}`;
 }
 
-export async function generateScript(req: ComicRequest): Promise<ComicScriptOutput> {
-  const response = await getClient().beta.messages.parse({
-    model: CLAUDE_MODEL,
+export async function generateScript(
+  client: Anthropic,
+  model: string,
+  req: ComicRequest
+): Promise<ComicScriptOutput> {
+  const response = await client.beta.messages.parse({
+    model,
     max_tokens: 16000,
     betas: [FALLBACK_BETA],
     fallbacks: 'default',
@@ -101,6 +102,8 @@ function describeCharacters(all: Character[], names: string[]): string {
 }
 
 export async function drawPanelSvg(
+  client: Anthropic,
+  model: string,
   body: PanelImageRequestBody,
   stylePrompt: string,
   size: { width: number; height: number }
@@ -119,8 +122,8 @@ ${describeCharacters(body.characters, panel.characters)}
 Panel description: ${panel.imagePrompt}
 ${speakers ? `Speakers and their bubble positions (place each speaker on that side): ${speakers}` : ''}`;
 
-  const response = await getClient().beta.messages.create({
-    model: CLAUDE_MODEL,
+  const response = await client.beta.messages.create({
+    model,
     max_tokens: 16000,
     betas: [FALLBACK_BETA],
     fallbacks: 'default',

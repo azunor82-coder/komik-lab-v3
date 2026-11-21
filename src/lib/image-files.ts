@@ -19,6 +19,27 @@ export async function persistImage(comicId: string, panelId: string, dataUri: st
   return file.uri;
 }
 
+/** Downloads an image URL (e.g. Pollinations) straight into the comic's folder. */
+export async function persistRemoteImage(comicId: string, panelId: string, url: string): Promise<string> {
+  const dir = comicDir(comicId);
+  dir.create({ intermediates: true, idempotent: true });
+  const file = new File(dir, `${panelId}-${Date.now()}.jpg`);
+  try {
+    const downloaded = await File.downloadFileAsync(url, file, { idempotent: true });
+    return downloaded.uri;
+  } catch (error) {
+    console.warn('[images] muat turun gagal', error);
+    throw new Error(remoteErrorMessage(error));
+  }
+}
+
+function remoteErrorMessage(error: unknown): string {
+  const text = error instanceof Error ? error.message : String(error);
+  if (/\b429\b/.test(text)) return 'Pollinations sedang sibuk (had kadar). Tunggu sebentar dan jana semula.';
+  if (/\b(4|5)\d\d\b/.test(text)) return 'Pollinations gagal menjana gambar. Cuba lagi atau tukar penjana.';
+  return 'Tidak dapat memuat turun gambar. Semak sambungan internet anda.';
+}
+
 export function deleteImageFile(uri: string) {
   if (!uri.startsWith('file:')) return;
   try {

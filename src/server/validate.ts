@@ -3,8 +3,8 @@ import { z } from 'zod';
 import { PANEL_COUNTS } from '@/lib/options';
 import type { ComicRequest, PanelImageRequestBody } from '@/lib/types';
 
-import { UserFacingError } from './http';
-import { BubbleKindSchema, BubblePositionSchema } from './schema';
+import { UserFacingError } from '@/core/errors';
+import { BubbleKindSchema, BubblePositionSchema } from '@/core/schema';
 
 const ProviderSchema = z.enum(['pollinations', 'openai', 'claude-svg']);
 

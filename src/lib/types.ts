@@ -102,7 +102,11 @@ export interface PanelImageRequestBody {
   seed: number;
 }
 
-export type PanelImageResult = { kind: 'data'; dataUri: string } | { kind: 'svg'; svg: string };
+export type PanelImageResult =
+  | { kind: 'data'; dataUri: string }
+  | { kind: 'svg'; svg: string }
+  /** On-device mode only: an image URL the app downloads and stores itself. */
+  | { kind: 'remote'; url: string };
 
 export interface PanelImageResponseBody {
   image: PanelImageResult;

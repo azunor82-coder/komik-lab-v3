@@ -98,7 +98,7 @@ export const PROVIDERS: ProviderOption[] = [
     id: 'openai',
     label: 'OpenAI Image',
     emoji: '🖼️',
-    description: 'Kualiti tinggi. Perlu OPENAI_API_KEY (berbayar).',
+    description: 'Kualiti tinggi. Perlu kunci OpenAI (berbayar).',
   },
   {
     id: 'claude-svg',

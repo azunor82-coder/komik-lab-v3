@@ -1,17 +1,19 @@
 import { Bangers_400Regular } from '@expo-google-fonts/bangers';
 import { ComicNeue_400Regular, ComicNeue_700Bold } from '@expo-google-fonts/comic-neue';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Link, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useSyncExternalStore } from 'react';
-import { View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
+import { loadSettings } from '@/lib/settings';
 import { loadComics } from '@/lib/store';
 import { colors, fonts } from '@/lib/theme';
 
 SplashScreen.preventAutoHideAsync();
 loadComics();
+loadSettings();
 
 const noopSubscribe = () => () => {};
 
@@ -55,9 +57,22 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: colors.paper },
           headerBackButtonDisplayMode: 'minimal',
         }}>
-        <Stack.Screen name="index" options={{ title: 'Komik Lab' }} />
+        <Stack.Screen
+          name="index"
+          options={{
+            title: 'Komik Lab',
+            headerRight: () => (
+              <Link href="/settings" asChild>
+                <Pressable accessibilityRole="button" accessibilityLabel="Tetapan" hitSlop={12}>
+                  <Text style={{ fontSize: 24 }}>⚙️</Text>
+                </Pressable>
+              </Link>
+            ),
+          }}
+        />
         <Stack.Screen name="create" options={{ title: 'Komik Baru' }} />
         <Stack.Screen name="comic/[id]" options={{ title: 'Komik' }} />
+        <Stack.Screen name="settings" options={{ title: 'Tetapan' }} />
       </Stack>
     </>
   );

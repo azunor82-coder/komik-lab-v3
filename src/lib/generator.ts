@@ -1,5 +1,6 @@
-import { api, errorMessage } from './api';
-import { deleteImageFile, persistImage } from './image-files';
+import { errorMessage } from './api';
+import { generatePanelImageVia, generateScriptVia } from './backend';
+import { deleteImageFile, persistImage, persistRemoteImage } from './image-files';
 import { addComic, getComic, makeId, randomSeed, updateComic, updatePanel } from './store';
 import type { Comic, ComicRequest, ImageProvider, Panel, PanelImage } from './types';
 
@@ -64,7 +65,7 @@ async function run(comicId: string) {
 
   if (comic.status === 'scripting') {
     try {
-      const { script, demo } = await api.script(comic.request);
+      const { script, demo } = await generateScriptVia(comic.request);
       updateComic(comicId, (c) => ({
         ...c,
         demo,
@@ -117,7 +118,7 @@ export async function drawPanel(comicId: string, panelId: string, options?: { ne
   updatePanel(comicId, panelId, (p) => ({ ...p, seed, status: 'generating', error: undefined }));
 
   try {
-    const { image } = await api.panelImage({
+    const { image } = await generatePanelImageVia({
       provider: comic.request.provider,
       artStyle: comic.request.artStyle,
       setting: comic.setting,
@@ -131,10 +132,11 @@ export async function drawPanel(comicId: string, panelId: string, options?: { ne
       },
       seed,
     });
-    const next: PanelImage =
-      image.kind === 'svg'
-        ? { kind: 'svg', svg: image.svg }
-        : { kind: 'uri', uri: await persistImage(comicId, panelId, image.dataUri) };
+    let next: PanelImage;
+    if (image.kind === 'svg') next = { kind: 'svg', svg: image.svg };
+    else if (image.kind === 'remote')
+      next = { kind: 'uri', uri: await persistRemoteImage(comicId, panelId, image.url) };
+    else next = { kind: 'uri', uri: await persistImage(comicId, panelId, image.dataUri) };
     const previous = getComic(comicId)?.panels.find((p) => p.id === panelId)?.image;
     updatePanel(comicId, panelId, (p) => ({ ...p, status: 'done', image: next, error: undefined }));
     if (previous?.kind === 'uri' && previous.uri !== (next.kind === 'uri' ? next.uri : '')) {

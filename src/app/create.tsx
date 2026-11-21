@@ -8,13 +8,13 @@ import { createComic } from '@/lib/generator';
 import { ART_STYLES, GENRES, LANGUAGES, PANEL_COUNTS, PROVIDERS, SAMPLE_IDEAS } from '@/lib/options';
 import { colors, fonts, MAX_PAGE_WIDTH } from '@/lib/theme';
 import type { ImageProvider, Language } from '@/lib/types';
-import { useServerStatus } from '@/lib/use-server-status';
+import { useBackendStatus } from '@/lib/backend';
 
 const MIN_IDEA = 5;
 
 export default function CreateScreen() {
   const insets = useSafeAreaInsets();
-  const { status } = useServerStatus();
+  const { status } = useBackendStatus();
   const [idea, setIdea] = useState('');
   const [genre, setGenre] = useState(GENRES[0].id);
   const [artStyle, setArtStyle] = useState(ART_STYLES[0].id);
@@ -116,7 +116,7 @@ export default function CreateScreen() {
                 key={p.id}
                 label={p.label}
                 emoji={p.emoji}
-                note={unavailable ? 'Kunci API belum ditetapkan' : p.description}
+                note={unavailable ? 'Masukkan kunci OpenAI dalam Tetapan dahulu' : p.description}
                 selected={provider === p.id}
                 disabled={unavailable}
                 style={styles.providerChip}
@@ -130,7 +130,8 @@ export default function CreateScreen() {
           <View style={styles.notice}>
             <Notice tone="warn">
               Mod demo aktif — skrip akan menggunakan cerita contoh
-              {provider === 'claude-svg' ? ' dan lukisan contoh' : ''}.
+              {provider === 'claude-svg' ? ' dan lukisan contoh' : ''}. Masukkan kunci API Anthropic dalam
+              Tetapan untuk cerita sebenar.
             </Notice>
           </View>
         ) : null}

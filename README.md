@@ -1,6 +1,6 @@
 # Komik Lab 📚✨
 
-Aplikasi mudah alih (Android & iOS) untuk **membuat komik secara automatik**.
+Aplikasi Android (dan iOS) untuk **membuat komik secara automatik**.
 Tulis satu idea cerita, pilih genre dan gaya lukisan, dan app akan:
 
 1. **Menulis skrip** — Claude cipta tajuk, watak (dengan rupa yang konsisten), babak, dialog, kapsyen dan kesan bunyi.
@@ -9,6 +9,67 @@ Tulis satu idea cerita, pilih genre dan gaya lukisan, dan app akan:
 4. **Sunting & kongsi** — ketik panel untuk ubah dialog atau lukis semula, kemudian kongsi sebagai gambar PNG.
 
 Dialog boleh dalam **Bahasa Melayu** atau **English**.
+
+---
+
+## 📱 Pasang di telefon Android (APK)
+
+App ini dibina menjadi fail APK menggunakan **Expo EAS Build** (percuma, build dibuat di awan Expo).
+Anda perlukan komputer (Windows / Mac / Linux) sekali sahaja untuk memulakan build.
+
+### 1. Sediakan (sekali sahaja)
+
+1. Pasang **Node.js LTS** dari <https://nodejs.org>.
+2. Daftar akaun Expo percuma di <https://expo.dev/signup>.
+3. Muat turun kod dan pasang pakej:
+
+   ```bash
+   git clone -b claude/auto-comic-maker-app-t3uljd https://github.com/azunor82-coder/komik-lab-v3.git
+   cd komik-lab-v3
+   npm install
+   ```
+
+4. Log masuk ke Expo:
+
+   ```bash
+   npx eas-cli@latest login
+   ```
+
+### 2. Bina APK
+
+```bash
+npm run build:apk
+```
+
+(Sama dengan `npx eas-cli@latest build --platform android --profile preview`.)
+
+Kali pertama, EAS akan bertanya beberapa soalan — jawab **Yes** untuk semuanya:
+
+- *Create an EAS project?* → **Yes** (ini menambah `projectId` ke `app.json`; commit perubahan itu)
+- *Generate a new Android Keystore?* → **Yes** (Expo simpan kunci tandatangan app anda dengan selamat)
+
+Build mengambil masa lebih kurang **10–20 minit**. Bila siap, EAS beri **pautan dan kod QR**.
+
+### 3. Pasang di telefon
+
+1. Buka pautan itu di telefon Android (atau imbas kod QR) dan muat turun fail `.apk`.
+2. Buka fail itu. Jika diminta, benarkan **"Pasang apl tidak diketahui"** untuk pelayar / pengurus fail anda.
+3. Buka **Komik Lab**.
+
+### 4. Masukkan kunci API
+
+1. Dapatkan kunci API Anthropic di <https://console.anthropic.com/settings/keys> (akaun perlu ada kredit).
+2. Dalam app, ketik **⚙️** di laman utama → **Kunci API Anthropic** → tampal kunci → **Simpan**.
+   App akan menguji kunci itu dahulu.
+3. (Pilihan) Masukkan kunci OpenAI jika mahu guna penjana gambar OpenAI.
+
+Kunci disimpan dengan selamat dalam telefon (Android Keystore) dan hanya dihantar terus kepada Anthropic / OpenAI.
+**Tiada pelayan diperlukan.** Tanpa kunci, app berjalan dalam **mod demo** (cerita & lukisan contoh).
+
+> 💡 Tiada komputer? Expo juga boleh bina dari GitHub terus melalui laman expo.dev (bahagian *GitHub* dalam projek),
+> tetapi projek EAS perlu dicipta dahulu (langkah `eas init` / build pertama di atas).
+
+---
 
 ## Ciri-ciri
 
@@ -19,103 +80,64 @@ Dialog boleh dalam **Bahasa Melayu** atau **English**.
   | Penjana | Kunci API | Nota |
   | --- | --- | --- |
   | 🌼 Pollinations | Tiada | Percuma, kadang-kadang perlahan / terhad |
-  | 🖼️ OpenAI Image | `OPENAI_API_KEY` | Kualiti tertinggi, berbayar |
-  | ✏️ Claude Lukis SVG | `ANTHROPIC_API_KEY` | Gaya vektor ringkas, watak paling konsisten |
+  | 🖼️ OpenAI Image | Kunci OpenAI | Kualiti tertinggi, berbayar |
+  | ✏️ Claude Lukis SVG | Kunci Anthropic | Gaya vektor ringkas, watak paling konsisten |
 
 - Belon dialog jenis cakap 💬, fikir 💭, jerit 📢 dan bisik 🤫
 - Koleksi komik disimpan dalam telefon (gambar disimpan sebagai fail, boleh dibuka luar talian)
 - Penjanaan diteruskan walaupun anda tukar skrin; disambung semula jika app ditutup
-- **Mod demo**: tanpa sebarang kunci API, app tetap boleh dicuba dengan cerita & lukisan contoh
 
 ## Cara ia berfungsi
 
-```
- Telefon (Expo / React Native)                Pelayan (Expo Router API routes)
- ┌───────────────────────────┐   POST /api/script        ┌──────────────────────────┐
- │ Borang idea → Komik baru  │ ───────────────────────▶ │ Claude: skrip berstruktur │
- │                           │   POST /api/panel-image   │ Pollinations / OpenAI /   │
- │ Halaman komik + editor    │ ───────────────────────▶ │ Claude SVG: gambar panel  │
- └───────────────────────────┘                           └──────────────────────────┘
-```
+App boleh menjana komik dalam tiga mod (lihat skrin ⚙️ Tetapan):
 
-Kunci API **hanya** disimpan di pelayan — tidak pernah dimasukkan ke dalam app telefon.
+| Mod | Bila | Bagaimana |
+| --- | --- | --- |
+| 📱 **Kunci dalam telefon** | Kunci Anthropic disimpan dalam Tetapan | Telefon terus memanggil Claude / OpenAI / Pollinations |
+| 🖥️ **Pelayan** | Mod pembangunan (`npm start`) atau build dengan `EXPO_PUBLIC_API_URL` | Telefon memanggil API routes Expo; kunci di pelayan |
+| 🎭 **Demo** | Tiada kunci dan tiada pelayan | Cerita dan lukisan contoh terbina dalam |
 
-## Mula (pembangunan)
+Logik penjanaan (prompt Claude, penjana gambar, demo, pembersihan skrip) berada dalam `src/core/` dan dikongsi oleh
+telefon dan pelayan.
 
-Keperluan: Node.js 20+ dan app **Expo Go** di telefon (atau emulator Android / simulator iOS).
+## Pembangunan
+
+Keperluan: Node.js 20+ dan app **Expo Go** di telefon (atau emulator Android).
 
 ```bash
 npm install
-cp .env.example .env      # isi ANTHROPIC_API_KEY (dan OPENAI_API_KEY jika mahu)
+cp .env.example .env      # pilihan: kunci untuk mod pelayan
 npm start                 # imbas kod QR dengan Expo Go (telefon & komputer dalam Wi-Fi yang sama)
 ```
 
-- Tekan `a` untuk emulator Android, `i` untuk simulator iOS, atau `w` untuk pratonton di pelayar.
-- Dalam mod pembangunan, API routes dijalankan oleh pelayan Expo yang sama, jadi app terus berfungsi.
-- Tanpa `ANTHROPIC_API_KEY`, app berjalan dalam **mod demo**.
+- Tekan `a` untuk emulator Android atau `w` untuk pratonton di pelayar.
+- Dalam mod pembangunan, tanpa kunci dalam Tetapan, app guna API routes pada pelayan Expo (kunci dari `.env`).
 
-### Pemeriksaan
+Pemeriksaan:
 
 ```bash
 npm run typecheck
 npm run lint
 ```
 
-## Deploy (production)
+## Mod pelayan (pilihan — jika app dikongsi dengan orang lain)
 
-App telefon perlukan pelayan awam untuk API routes.
-
-### Pilihan A — EAS Hosting
+Jika anda mahu orang lain guna app tanpa memasukkan kunci sendiri, simpan kunci di pelayan:
 
 ```bash
 npm run build:server            # npx expo export --platform web
-npx eas-cli@latest deploy --prod
+npx eas-cli@latest deploy --prod   # EAS Hosting
+# atau hos sendiri: ANTHROPIC_API_KEY=... PORT=3000 npm run serve
 ```
 
-Tetapkan `ANTHROPIC_API_KEY` (dan kunci lain) sebagai pembolehubah persekitaran projek di EAS, kemudian deploy semula.
+Kemudian bina app dengan `EXPO_PUBLIC_API_URL=https://pelayan-anda...` (letak dalam bahagian `env` profil build di
+`eas.json`). Untuk menghalang orang lain guna pelayan anda, tetapkan `APP_ACCESS_TOKEN` di pelayan dan nilai yang
+sama sebagai `EXPO_PUBLIC_APP_TOKEN` dalam build. Semua pembolehubah ada dalam [`.env.example`](.env.example).
 
-### Pilihan B — Pelayan Node sendiri (Render, Railway, VPS, …)
-
-```bash
-npm run build:server
-ANTHROPIC_API_KEY=... PORT=3000 npm run serve
-```
-
-### Build app telefon
-
-Beritahu app di mana pelayan anda dengan `EXPO_PUBLIC_API_URL` semasa build, contohnya:
-
-```bash
-EXPO_PUBLIC_API_URL=https://pelayan-anda.example.com npx eas-cli@latest build -p android --profile preview
-```
-
-(Atau letak `EXPO_PUBLIC_API_URL` dalam bahagian `env` profil build di `eas.json`.)
-
-### Lindungi pelayan anda
-
-Tanpa perlindungan, sesiapa yang tahu alamat pelayan boleh guna kredit API anda. Tetapkan nilai rahsia yang sama di:
-
-- pelayan: `APP_ACCESS_TOKEN=...`
-- build app: `EXPO_PUBLIC_APP_TOKEN=...`
-
-Ini menghalang penyalahgunaan biasa (token masih boleh diekstrak daripada app, jadi pantau penggunaan API anda juga).
-
-## Konfigurasi
-
-Lihat [`.env.example`](.env.example) untuk semua pembolehubah. Yang utama:
-
-| Pembolehubah | Kegunaan |
-| --- | --- |
-| `ANTHROPIC_API_KEY` | Menulis skrip & melukis SVG (wajib untuk komik sebenar) |
-| `OPENAI_API_KEY` | Penjana gambar OpenAI |
-| `CLAUDE_MODEL` | Model Claude (lalai `claude-opus-5-5`) |
-| `DEMO_MODE=1` | Paksa mod demo |
-| `EXPO_PUBLIC_API_URL` | Alamat pelayan untuk build telefon |
-
-Nota tentang Claude: skrip dijana dengan *structured outputs* (JSON yang disahkan oleh skema), effort `medium`;
-lukisan SVG guna effort `low` supaya setiap panel lebih pantas (ubah di `src/server/claude.ts`).
-*Server-side fallback* (`fallbacks: "default"`) diaktifkan supaya permintaan yang ditolak oleh pengelas keselamatan
-dicuba semula secara automatik pada model sandaran.
+Nota tentang Claude: model lalai `claude-opus-5-5`. Skrip dijana dengan *structured outputs* (JSON yang disahkan
+oleh skema) pada effort `medium`; lukisan SVG pada effort `low` supaya setiap panel lebih pantas (ubah di
+`src/core/claude.ts`). *Server-side fallback* (`fallbacks: "default"`) diaktifkan supaya permintaan yang ditolak
+oleh pengelas keselamatan dicuba semula secara automatik pada model sandaran.
 
 ## Struktur projek
 
@@ -125,21 +147,21 @@ src/
     index.tsx             Laman utama + koleksi komik
     create.tsx            Borang komik baru
     comic/[id].tsx        Paparan komik, kemajuan, kongsi, padam
-    api/                  API routes (berjalan di pelayan)
-      script+api.ts       Jana skrip dengan Claude
-      panel-image+api.ts  Jana gambar panel
-      status+api.ts       Kunci mana yang tersedia / mod demo
-  components/
-    comic/                Halaman komik, panel, belon dialog, kapsyen, SFX
-    PanelEditor.tsx       Editor panel
-    ui.tsx                Butang, cip, notis
-  lib/                    Kod app: jenis data, storan, penjana, API klien
-  server/                 Kod pelayan sahaja: Claude, penjana gambar, demo, pengesahan
+    settings.tsx          Kunci API & mod semasa
+    api/                  API routes (mod pelayan)
+  components/             Halaman komik, panel, belon dialog, editor panel, UI
+  core/                   Logik penjanaan dikongsi: Claude, penjana gambar, demo, skema
+  lib/                    Kod app: storan, tetapan, pemilih mod, penjana, kongsi
+  server/                 Kod pelayan sahaja: konfigurasi env, pengesahan, HTTP
+metro.config.js           Guna binaan CommonJS SDK Anthropic (elak ralat import bulat)
+eas.json                  Profil EAS Build (preview = APK)
 server.js                 Pelayan Node untuk hos sendiri
 ```
 
 ## Had yang diketahui
 
-- Versi web hanya untuk pratonton: storan pelayar kecil, jadi komik dengan banyak gambar mungkin tidak disimpan.
+- Belum diuji pada telefon sebenar dengan kunci API sebenar — sila laporkan jika ada masalah.
+- iPhone memerlukan akaun Apple Developer (USD 99/tahun) untuk dipasang.
+- Versi web hanya untuk pratonton: storan pelayar kecil, dan kunci disimpan dalam storan pelayar biasa.
 - Pollinations ialah perkhidmatan percuma pihak ketiga — kadang-kadang lambat, terhad atau berubah. Jika gagal, ketik panel untuk cuba lagi atau tukar penjana.
 - Kedudukan belon dialog berdasarkan arahan kepada AI (penutur kiri → belon kiri); tidak selalu tepat. Gunakan editor panel untuk ubah kedudukan.

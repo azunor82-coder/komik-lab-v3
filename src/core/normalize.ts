@@ -1,7 +1,7 @@
 import { buildRows } from '@/lib/layout';
 import type { ComicScript } from '@/lib/types';
 
-import { UserFacingError } from './http';
+import { UserFacingError } from './errors';
 import type { ComicScriptOutput } from './schema';
 
 /**

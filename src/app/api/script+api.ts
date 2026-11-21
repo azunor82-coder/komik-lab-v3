@@ -1,9 +1,10 @@
 import type { ScriptResponseBody } from '@/lib/types';
-import { generateScript } from '@/server/claude';
-import { isDemoMode } from '@/server/config';
-import { demoScript } from '@/server/demo';
+import { generateScript } from '@/core/claude';
+import { demoScript } from '@/core/demo';
+import { normalizeScript } from '@/core/normalize';
+import { getAnthropic } from '@/server/anthropic';
+import { CLAUDE_MODEL, isDemoMode } from '@/server/config';
 import { checkAccess, errorResponse, readJson } from '@/server/http';
-import { normalizeScript } from '@/server/normalize';
 import { parseComicRequest } from '@/server/validate';
 
 export async function POST(request: Request): Promise<Response> {
@@ -11,7 +12,9 @@ export async function POST(request: Request): Promise<Response> {
     checkAccess(request);
     const comicRequest = parseComicRequest(await readJson(request));
     const demo = isDemoMode();
-    const raw = demo ? demoScript(comicRequest) : await generateScript(comicRequest);
+    const raw = demo
+      ? demoScript(comicRequest)
+      : await generateScript(getAnthropic(), CLAUDE_MODEL, comicRequest);
     const body: ScriptResponseBody = {
       script: normalizeScript(raw, comicRequest.panelCount),
       demo,
