@@ -43,6 +43,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "4f9c715a-6bbe-4801-9176-8629a6e2f88a"
+      }
+    },
+    "owner": "wolfgangmax"
   }
 }
